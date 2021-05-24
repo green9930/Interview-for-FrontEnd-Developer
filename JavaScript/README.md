@@ -20,6 +20,8 @@
 [18. 이터러블](#이터러블)
 [19. 스프레드 문법](#스프레드-문법)
 [20. 디스트럭처링 할당](#디스트럭처링-할당)
+[21. 브라우저의 렌더링 과정](#브라우저의-렌더링-과정)
+[22. DOM](#DOM)
 
 ---
 
@@ -1343,14 +1345,24 @@ Person.sayHello(); // Hello!
 
 ### extends 키워드
 
-- 상속받을 클래스 정의
+- 수퍼클래스와 서브클래스 간의 상속 관계 정의
+- 서브클래스(subclass) : 상속을 통해 확장된 클래스 (자식 클래스)
+- 수퍼클래스(superclass) : 서브클래스에게 상속된 클래스 (부모 클래스)
+- 서로 인스턴스, 클래스 간의 프로토타입 체인을 생성하기 때문에 프로토타입 메서드, 정적 메서드 모두 상속 가능하다.
 
-**super**
+### super 키워드
+
 함수처럼 호출할 수 있고 this와 같이 식별자처럼 참조할 수 있는 특수한 키워드  
 (ES6의 메서드 축약 표현으로 정의된 함수만이 `[[HomeObject]]`를 갖는디.)
 
 - super를 호출하면 수퍼클래스의 constructor(super-constructor)를 호출한다.
 - super를 참조하면 수퍼클래스의 메서드를 호출할 수 있다.
+- 주의 사항
+  1. 서브클래스에서 constructor를 생략하지 않는 경우 서브클래스의 constructor에서는 반드시 super를 호출해야 한다.
+  2. 서브클래스의 constructor에서 super를 호출하기 전에는 this를 참조할 수 없다.
+  3. super는 반드시 서브클래스의 constructor에서만 호출한다. 서브클래스가 아닌 클래스의 constructor나 함수에서 super를 호출하면 에러가 발생한다.
+
+**super 참조**
 
 ---
 
@@ -1367,12 +1379,12 @@ const jobs = [ 'teacher', 'designer', 'front-end developer' ];
 인덱스 : (index) 배열에서 자신의 위치를 나타내는 0 이상의 정수로 배열의 요소에 접근할 때 사용
 
 **객체 vs. 배열**
-| 구분          | 객체             | 배열      |
-|-------------|----------------|---------|
-| 구조          | 프로퍼티 키, 프로퍼티 값 | 인덱스, 요소 |
-| 값의 참조       | 프로퍼티 키         | 인덱스     |
-| 값의 순서       | X              | O       |
-| length 프로퍼티 | X              | O       |
+|     구분      |       객체       |   배열    |
+|:-----------:|:--------------:|:-------:|
+|     구조      | 프로퍼티 키, 프로퍼티 값 | 인덱스, 요소 |
+|    값의 참조    |     프로퍼티 키     |   인덱스   |
+|    값의 순서    |       X        |    O    |
+| length 프로퍼티 |       X        |    O    |
 
 배열은 값의 순서와 length 프로퍼티를 갖기 때문에 반복문에서 순차적으로 값에 접근이 가능하다. 
 
@@ -1387,15 +1399,16 @@ const jobs = [ 'teacher', 'designer', 'front-end developer' ];
 
 ## length 프로퍼티와 희소 배열
 
+- 유사배열객체 : length 프로퍼티를 갖는 객체
 - length 프로퍼티는 값에 배열에 요소를 추가 or 삭제하면 자동 갱신된다.
 - 요소의 개수로 결정되지만 임의의 숫자 값을 명시적으로 할당 가능하다.
   - 할당 값 < 현재 length 프로퍼티 값 : 배열 길이가 줄어든다.
-  - 할당 값 > 현재 length 프로퍼티 값 : 프로퍼티 값을 바뀌지만 실제 배열 길이가 늘어나는 것은 아니다.
+  - 할당 값 > 현재 length 프로퍼티 값 : 프로퍼티 값을 바뀌지만 실제 배열 길이가 늘어나는 것은 아니다.  
 
 ## 배열 생성 방법
 
 1. 배열 리터럴
-  - 0개 시앗으이 요소를 쉼표로 구분하여 대괄호로 묶는 방법 (프로퍼티 키는 없고 값만 있음)
+  - 0개 이상의 요소를 쉼표로 구분하여 대괄호로 묶는 방법 (프로퍼티 키는 없고 값만 있음)
     ```js
     const arr1 = [1, 2, 3];
     console.log(arr1.length); // 3
@@ -1447,17 +1460,6 @@ const jobs = [ 'teacher', 'designer', 'front-end developer' ];
     console.log(arr2); // [ 'h', 'e', 'l', 'l', 'o' ]
     ```
 
-## 배열 요소의 참조
-
-대괄호 표기법 사용
-
-```js
-const arr = [1, 2, 3];
-
-console.log(arr[0]); // 1
-console.log(arr[3]); // undefined
-```
-
 ## 배열 요소의 추가와 갱신
 
 - 존재하지 않는 인덱스에 값을 할당하면 새로운 요소가 추가되며, length 프로퍼티 값은 자동 갱신된다.
@@ -1496,7 +1498,7 @@ console.log(arr);
 ## 배열 메서드 
 
 배열 메서드의 반환 패턴 
-1. mutator methid : 원본 배열을 직접 변경하여 반환
+1. mutator method : 원본 배열을 직접 변경하여 반환
 2. accessor method : 새로운 배열을 생성하여 반환
 
 ### Array.isArray (Accessor)
@@ -1695,6 +1697,9 @@ arr.includes(10); // false
 
 ## 배열 고차 함수
 
+함수를 인수로 전달받거나 함수를 반환하는 함수  
+함수형 프로그래밍에 기반을 두고 있으며, 조건문이나 반복문은 로직 흐름을 이해하기 어렵게 하고, 변수는 변경 가능성이 높기 때문에 부수효과를 최대한 억제하여 프로그램의 안정성을 높이기 위해 배열 고차 함수를 사용한다.
+
 ### Array.prototype.sort (Mutator)
 
 배열의 요소를 정렬하여 반환
@@ -1858,15 +1863,6 @@ map 메서드로 생성된 새로운 배열을 평탄화한다.
 
 ---
 
-# 이터러블
-
-## 이터러블과 유사 배열 객체
-
-유사 배열 객체는 이터러블이 아닌 일반 객체이기 때문에 Symbol.iterator 메서드가 없다.  
-단, arguments, NodeList, HTMLCollection은 유사 배열 객체면서 이터러블이기 때문에 반복문으로 순회 가능하다.
-
----
-
 # 스프레드 문법
 
 하나로 뭉쳐 있는 여러 값들의 집합을 펼쳐서 개별적인 값들의 목록으로 만든 것
@@ -1948,7 +1944,327 @@ const student = { firstName: 'John', lastName: 'Doe'};
 const {lastName, firstName} = student;
 console.log(firstName, lastName); // John Doe
 ```
-- 우변에 객체 or 객체로 평가될 수 있는 표현식을 할당하지 않으면 에러 발생
+- 우변에 객체 or 객체로 평가될 수 있는 표현식을 할당하지 않으면 TypeError 발생
+
+---
+
+# 브라우저의 렌더링 과정
+
+![브라우저렌더링과정](../src/browser-rendering-process.jpg)
+
+1. 브라우저가 HTML, CSS, JavaScript, 이미지, 폰트 파일 등 렌더링에 필요한 리소스 요청
+2. 서버 응답
+3. 브라우저의 렌더링 엔진이 서버로부터 받은 HTML과 CSS를 파싱하여 DOM, CSSOM을 생성하고 렌더 트리(DOM + CSSOM) 생성
+4. 브라우저의 스크립트 엔진이 서버로부터 응답된 JavaScript를 파싱하여 AST(Abstract Syntax Tree)를 생성하고 바이트코드로 변환하여 실행한다. 
+  *이때 자바스크립트는 DOM API를 통해 DOM, CSSOM을 변경할 수 있다. (변경된 DOM, CSSOM은 다시 렌더 트리로 결합된다.)
+5. 렌더 트리를 기반으로 HTML 요소의 레이아웃을 계산하고 브라우저 화면에 페인팅한다. 
+
+## 요청과 응답
+ 
+브라우저의 핵심 기능 : 필요한 리소스(정적 데이터 + 동적 데이터)를 서버에 요청(request)하고 서버로부터 응답(response)받아 파싱하여 브라우저에 시각적으로 렌더링하는 것
+
+*정적 데이터 : HTML, CSS, JavaScript, 이미지, 폰트 파일 등  
+*동적 데이터 : 서버가 동적으로 생성한 데이터  
+
+브라우저의 주소창에 URI을 입력하면 루트 요청이 해당 서버로 전송된다. 루트 요청에는 암묵적으로 `index.html`을 응답하도록 되어있다. 따라서 서버는 루트 요청에 대해 서버의 루트 폴더에 있는 정적 파일 `index.html`을 클라이언트로 응답한다. 
+
+**index.html 파일만 요청했음에도 다른 리소스까지 로딩되는 이유**  
+브라우저의 렌더링 엔진은 HTML을 파싱하는 중 외부 리소스를 로드하는 태그(`<link>`태그-css, `<img>`태그-이미지, `<script>`태그-JavaScript 등)를 만나면 파싱을 일시 중단하고 해당 리소스 파일을 서버에 요청하기 때문
+
+## HTTP 1.1 vs. HTTP 2.0
+
+HTTP(HyperText Transfer Protocol) : 웹에서 브라우저와 서버가 통신을 하기 위한 프로토콜(규약)
+
+**HTTP 1.1**  
+- 리소스의 동시 전송이 불가능한 구조 : connection 당 하나의 요청과 응답만 처리 (여러 요청과 응답을 한 번에 처리할 수 없다.)
+- 요청할 리소스의 개수에 비례하여 응답 시간도 증가
+
+**HTTP 2.0**
+- 리소스의 동시 전송 가능 : connection 당 다중 요청과 응답 가능
+
+## HTML 파싱과 DOM 생성
+
+(참조 : [DOM MDN](https://developer.mozilla.org/ko/docs/Web/API/Document_Object_Model/Introduction))
+
+- HTML 파싱 : 문자열로 이루어진 순수한 텍스트(HTML문서)를 브라우저가 이해할 수 있는 자료구조(객체)로 변환하여 메모리에 저장하는 과정
+- 렌더링 : (renderding) 파싱한 문서를 브라우저에 시각적으로 보여주는 것
+- DOM : (Document Object Model) HTML 문서가 파싱된 결과물로 브라우저가 이해할 수 있게 구조화된 HTML, XML 트리 자료구조(프로그래밍 인터페이스)  
+
+- DOM 생성 과정
+  1. 서버의 HTML 파일이 브라우저 요청으로 응답된다. 서버는 HTML 파일을 읽어 들여 메모리에 저장한 뒤, 이 메모리에 저장된 2진수 바이트로 응답한다.
+  2. 브라우저는 HTML 문서를 바이트 형태로 응답받는다. 
+  그리고 HTML 파일 내 `meta`태그의 charset 어트리뷰트에 선언된 인코딩 방식으로 문자열 변환한다.
+  3. 문자열로 변환된 HTML 문서를 읽어들여 토큰(token, 문법적 의미를 갖는 코드의 최소 단위)으로 분해한다.
+  4. 각 토큰들을 객체로 변환하여 노드(node, DOM을 구성하는 기본 요소)를 생성한다.  
+  5. HTML 요소들이 모여 HTML 문서가 만들어지고 이 요소들은 중첩 관계로 관계가 형성된다. 이러한 중첩 관계를 이용하여 모든 노드들을 **트리 자료구조**로 구성하며 이를 DOM이라 한다.
+
+**노드(ndoe)의 종류**
+- 문서 노드
+- 요소 노드
+- 어트리뷰트 노드
+- 텍스트 노드
+
+## CSS 파싱과 CSSOM 생성
+
+- 렌더링 엔진이 HTML 문서를 순차적으로 파싱하며 DOM을 생성하다가 CSS를 로딩하는 태그를 만나면 DOM 생성을 일시 중지하고 CSS를 HTML과 동일한 파싱 과정을 거쳐 CSSOM(CSS Object Model)을 생성한다. 
+- CSSOM 생성이 완료되면 중단 지점부터 다시 HTML 파싱을 이어 나간다.
+- CSSOM은 CSS의 상속을 반영하여 생성된다. (CSs에서 상속관계를 이용할 수 있는 이유)
+
+## 렌더 트리 생성
+
+렌더 트리 : (render tree) DOM과 CSSOM이 렌더링을 위해 결합된 트리 자료구조 
+
+렌더 트리는 렌더링을 위한 트리 자료 구조이므로 브라우저 화면에 렌더링되지 않는 노드, CSS에 의해 비표시(`display: none`등)되는 노드는 포함되지 않는다.  
+
+완성된 렌더 트리는 각 HTML 요소의 레이아웃을 계산하는 데 사용되며 브라우저의 페인팅 처리에 입력 된다.  
+-> 리렌더링을 최소화해야 할 필요성 등장 (리플로우와 리페인팅이 자주 발생하면 성능에 악영향을 주기 때문이다.)
+
+## 자바스크립트 파싱과 실행
+
+DOM은 DOM API를 제공하기 때문에 자바스크립트 코드에서 DOM API를 사용하여 이미 생성된 DOM을 동적으로 조작할 수 있다.  
+
+자바스크립트 엔진 : 자바스크립트의 파싱과 실행 처리  
+
+AST (Abstract Syntax Tree) : 토큰에 문법적 의미와 구조를 반영한 트리 구조의 자료구조   
+
+1. tokenizing : 자바스크립트 코드를 해석하여 토큰으로 분해
+2. parsing : 토큰들의 집합을 분석하여 AST를 생성한다. 
+3. 바이트코드 생성 및 실행 : AST는 바이트코드로 변환되고 인터프리터에 의해 실행된다. 
+
+## 리플로우와 리페인트
+
+자바스크립트 코드에서 DOM이나 CSSOM을 변경하는 DOM API가 사용된 경우 DOM과 CSSOM이 변경되고 다시 렌더 트리로 결합되고 렌더 트리는 리플로우와 리페인팅 과정을 거쳐 리렌더링된다.
+
+- 리플로우 : 노드 추가 및 삭제, 요소의 크기 및 위치 변경, 윈도우 리사이징 등 레이아웃에 변경이 발생하는 경우 다시 레이아웃을 계산하는 것
+- 리페인팅 : 재결합된 렌더 트리를 기반으로 다시 페인팅하는 것
+*리플로우와 리페인딩이 반드시 순차적으로 동시에 실행되는 것은 아니다. (레이아웃에 변경이 없으면 리페인팅 단독 실행도 가능)
+
+## 자바스크립트 파싱에 의한 HTML 파싱 중단
+
+브라우저는 동기적으로 HTML, CSS, 자바스크립트를 파싱하고 실행한다. 따라서 `<script>` 태그 위치에 따라 HTML 파싱이 지연되어 DOM 생성이 늦춰질 수 있다. 
+
+**자바스크립트 코드를 가장 마지막에 실행해야 하는 이유**  
+- DOM이 완성되지 않은 상태에서 자바스크립트 코드가 DOM을 조작할 경우 에러 발생할 확률이 높다.
+- 자바스크립트 로딩으로 인해 HTML 요소의 렌더링이 늦춰져 페이지 로딩 시간이 길어진다. 
+
+## script 태그의 async / defer 어트리뷰트
+
+```js
+<script async src="app.js"></script>
+<script defer src="app.js"></script>
+```
+
+**async 어트리뷰트**
+- HTML 파싱과 외부 자바스크립트 파일의 로드가 비동기적으로 동시에 진행된다.
+- 자바스크립트의 파싱 및 실행은 로드가 완료된 후 진행되며, HTML 파싱은 중단된다. 
+- 다수의 script 태그에 async 어트리뷰트를 지정하면 script 태그 순서와 상관없이 로드가 완료된 자바스크립트 파일부터 실행되기 때문에 **순서가 보장되지 않는다.**
+
+**defer 어트리뷰트**
+- HTML 파싱과 외부 자바스크립트 파일의 로드가 비동기적으로 동시에 진행된다.
+- 자바스크립트의 파싱 및 실행은 HTML 파싱이 완료되어 DOM 생성이 완료된 직후 진행된다. 
+
+---
+
+# DOM
+
+DOM : (Document Object Model) HTML 문서가 파싱된 결과물로서 HTML 문서의 계층적 구조와 정보를 표현하며 이를 제어할 수 있는 API(프로퍼티와 메서드)를 제공하는 트리 자료구조
+
+## 노드
+
+```js
+<div class="box">container</div>
+```
+- 요소 노드 : `<div></div>`
+- 어트리뷰트 노드 : `class="box"`
+- 텍스트 노드 : `container`
+
+HMTL 요소들은 중첩 관계에 의해 계층적인 부자 관계가 형성되고 HTML 요소를 객체화 한 모든 노드 객체들을 트리 자료구조로 구성한다. 
+
+### 노드 객체의 타입
+
+- 문서 노드 (document node)
+  - DOM 트리 최상위에 존재하는 루트 노드로서 document 객체를 가리킨다.
+  - document 객체 : 브라우저가 렌더링한 HTML 문서 전체를 가리키는 객체 (window의 document 프로퍼티에 바인딩되어 있음)
+  - DOM 트리 노드에 접근하기 위한 진입점
+- 요소 노드 (element node)
+  - HTML 요소를 가리키는 객체로 문서의 구조를 표현한다.
+  - HTML 요소 간의 중첩에 의해 부자 관계를 가지며, 이 관계를 통해 정보를 구조화한다.
+- 어트리뷰트 노드 (attribute node)
+  - 어트리뷰트가 지정된 HTML 요소의 요소 노드와 연결되어 있다.
+  - 부모 노드 없이 요소 노드에만 연결되어 있으므로 요소 노드의 형제(sibling) 노드는 아니다. 따라서 어트리뷰트 노드에 접근해서 참조, 변경하려면 먼저 요소 노드에 접근해야 한다.
+- 텍스트 노드 (text node)
+  - HTML 요소의 텍스트를 가리키는 객체로 문서의 정보를 표현한다.
+  - DOM 트리의 최종단으로 요소 노드의 자식 노드이자 자식 노드를 가질 수 없는 leaf node이다. 따라서 텍스트 노드에 접근하려면 부모인 요소 노드에 접근해야 한다.
+
+### 노드 객체의 상속 구조
+
+요소 노드 객체는 HTML 요소의 종류에 따라 고유한 기능이 있다.    
+노드 객체는 공통된 기능일수록 프로토타입 체인의 상위에, 개별적인 고유 기능일수록 프로토타입 체인의 하위에 프로토타입 체인을 구축하여 노드 객체에 필요한 기능(프로퍼티, 메서드)을 제공하는 상속 구조를 갖는다.  
+
+DOM은 HTML 문서의 계층적 구조와 정보를 표현하고 노드  타입에 따라 필요한 기능을 DOM API(프로퍼티와 메서드의 집합)로 제공한다. (DOM API를 통해 HTML의 구조, 내용, 스타일을 동적으로 조작 가능)
+
+## 요소 노드 취득
+
+1. id를 이용한 요소 노드 취득
+2. 태그 이름을 이용한 요소 노드 취득
+3. class를 이용한 요소 노드 취득
+4. CSS 선택자를 이용한 요소 노드 취득
+
+### 1. id를 이용한 요소 노드 취득
+
+`Document.prototype.getElementById` 메서드는 인수로 전달한 id 어트리뷰트 값을 갖는 하나의 요소 노드를 탐색하여 반환한다.
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <ul>
+      <li id="red">Red</li>
+      <li id="blue">Blue</li>
+      <li id="orange">Orange</li>
+    </ul>
+    <script>
+      const $elem = document.getElementById("red");
+
+      $elem.style.color = "red";
+    </script>
+  </body>
+</html>
+```
+- HTML 문서 내에 중복된 id 값을 갖는 HTML 요소가 여러 개 존재하더라도 에러는 발생하지 않는다.
+- 해당되는 요소 노드가 여러 개일 경우 getElementById 메서드는 첫 번째 요소 노드만 반환한다.
+- 해당되는 요소 노드가 존재하지 않는 경우 getElementById 메서드는 null을 반환한다.
+
+### 2. 태그 이름을 이용한 요소 노드 취득
+
+`Document.prototype/Element.prototype.getElementsByTagName` 메서드는 인수로 전달한 태그 이름을 갖는 모든 요소 노드들을 탐색하여 반환한다.
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <ul>
+      <li id="red">Red</li>
+      <li id="blue">Blue</li>
+      <li id="orange">Orange</li>
+    </ul>
+    <script>
+      const $elems = document.getElementsByTagName("li");
+
+      [...$elems].map((elem) => {
+        elem.style.color = "red";
+      });
+    </script>
+  </body>
+</html>
+```
+- getElementsByTagName 메서드는 인수로 여러 개의 요소 노드 객체를 갖는 DOM 컬렉션 객체인 HTMLCollection 객체를 반환한다.
+- Document.prototype.getElementsByTagName : DOM 전체에서 요소 노드를 탐색하여 반환
+- Element.prototype.getElementsByTagName : 특정 요소 노드의 자손 노드 중 요소 노드를 탐색하여 반환
+- 인수로 전달된 태그 이름을 갖는 요소가 존재하지 않는 경우 빈 HTMLCollection 객체를 반환한다.
+
+### 3. class를 이용한 요소 노드 취득
+
+`Document.prototype/Element.prototype.getElementsByClassName` 메서드는 인수로 전달한 class 어트리뷰트 값을 갖는 모든 요소들을 탐색하여 반환한다.
+*class 값은 공백으로 구분하여 여러 개 전달 가능
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <ul>
+      <li id="color01" class="color red">Red</li>
+      <li id="color02" class="color blue">Blue</li>
+      <li id="color03" class="color orange">Orange</li>
+    </ul>
+    <script>
+      const $colors = document.getElementsByClassName("color");
+      const $blue = document.getElementsByClassName("blue");
+
+      [...$colors].map((elem) => {
+        elem.style.color = "red";
+      });
+
+      [...$blue].map((elem) => {
+        elem.style.color = "blue";
+      });
+    </script>
+  </body>
+</html>
+```
+- getElementsByClassName 메서드는 인수로 여러 개의 요소 노드 객체를 갖는 DOM 컬렉션 객체인 HTMLCollection 객체를 반환한다.
+- Document.prototype.getElementsByClassName : DOM 전체에서 요소 노드를 탐색하여 반환
+- Element.prototype.getElementsByClassName : 특정 요소 노드의 자손 노드 중 요소 노드를 탐색하여 반환
+- 인수로 전달된 태그 이름을 갖는 요소가 존재하지 않는 경우 빈 HTMLCollection 객체를 반환한다.
+
+### 4. CSS 선택자를 이용한 요소 노드 취득
+
+`Document.prototype/Element.prototype.querySelector` 메서드는 스타일을 적용하고자 하는 HTML 요소를 특정할 때 사용하며 CSS 선택자를 만족하는 하나의 요소 노드를 탐색하여 반환한다.
+- 해당되는 요소 노드가 여러 개인 경우 첫 번째 요소 노드만 반환
+- 해당되는 노드가 존재하지 않는 경우 null 반환
+- CSS 선택자가 문법에 맞지 않는 경우 DOMException 에러 발생
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <ul>
+      <li id="color01" class="color red">Red</li>
+      <li id="color02" class="color blue">Blue</li>
+      <li id="color03" class="color orange">Orange</li>
+    </ul>
+    <script>
+      const $colors = document.querySelector(".color");
+      // 요소 노드를 반환하므로 map 함수를 이용할 수 없다.
+      $colors.style.color = "red";
+    </script>
+  </body>
+</html>
+```
+
+`Document.prototype/Element.prototype.querySelectorAll` 메서드는 인수로 전달한 CSS 선택자를 만족시키는 모든 요소 노드를 탐색하여 반환한다.
+- 해당되는 요소 노드가 존재하지 않는 경우 빈 NodeList 객체 반환 (NodeList 객체는 유사 배열 객체이면서 이터러블)
+- CSS 선택자가 문법에 맞지 않는 경우 DOMException 에러 발생
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <ul>
+      <li id="color01" class="color red">Red</li>
+      <li id="color02" class="color blue">Blue</li>
+      <li id="color03" class="color orange">Orange</li>
+    </ul>
+    <script>
+      const $colors = document.querySelectorAll("ul > li");
+
+      [...$colors].map((elem) => {
+        elem.style.color = "red";
+      });
+    </script>
+  </body>
+</html>
+```
+
+### 특정 요소 노드를 취득할 수 있는지 확인
+
+`Element.prototype.matches` 메서드는 인수로 전달한 CSS 선택자를 통해 특정 요소 노드를 취득할 수 있는지 확인한다. (이벤트 위임을 사용할 때 유용하다.)
+
+
+### HTMLCollection / NodeList
+
+- DOM API가 여러 개의 결과값을 반환하기 위한 DOM 컬렉션 객체로 유사 배열 객체이면서 이터러블이다. 
+  -> 반복문으로 순회할 수 있으며 스프레드 문법을 사용하여 배열로 변환할 수 있다.
+- 노드 객체의 상태 변화를 실시간으로 반영하는 살아 있는(live) 객체이다.
+  - HTMLCollection : 언제나 live 객체로 동작한다. 
+  - NodeList : 대부분 노드 객체의 상태 변화를 실시간으로 반영하지 않고 과거의 정적 상태를 유지하는 non-live 객체로 동작하지만 경우에 따라 live 객체로 동작한다.
+
+- 대신 스프레드 문법을 사용해 배열로 변환해서 사용하는 것을 권장
+
+
+
+
+
 ---
 
 # 참조
