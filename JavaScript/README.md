@@ -22,6 +22,10 @@
 [20. 디스트럭처링 할당](#디스트럭처링-할당)
 [21. 브라우저의 렌더링 과정](#브라우저의-렌더링-과정)
 [22. DOM](#DOM)
+[23. 이벤트](#이벤트)
+[24. 타이머](#타이머)
+[25. 비동기 프로그래밍](#비동기-프로그래밍)
+[26. Ajax](#Ajax)
 
 ---
 
@@ -2250,7 +2254,6 @@ DOM은 HTML 문서의 계층적 구조와 정보를 표현하고 노드  타입�
 
 `Element.prototype.matches` 메서드는 인수로 전달한 CSS 선택자를 통해 특정 요소 노드를 취득할 수 있는지 확인한다. (이벤트 위임을 사용할 때 유용하다.)
 
-
 ### HTMLCollection / NodeList
 
 - DOM API가 여러 개의 결과값을 반환하기 위한 DOM 컬렉션 객체로 유사 배열 객체이면서 이터러블이다. 
@@ -2261,11 +2264,391 @@ DOM은 HTML 문서의 계층적 구조와 정보를 표현하고 노드  타입�
 
 - 대신 스프레드 문법을 사용해 배열로 변환해서 사용하는 것을 권장
 
+### textContent vs. innerHTML
 
-
+### HTML Attribute vs. DOM 프로퍼티
 
 
 ---
+
+# 이벤트
+
+## 이벤트 드리븐 프로그래밍
+
+- 애플리케이션에서 특정 타입의 이벤트에 대해 반응하여 어떤 일을 하고 싶다면 해당 이벤트가 발생했을 때 호출될 함수를 브라우저에게 알려 호출을 위임한다.
+- 이벤트 핸들러 : (event handler) 이벤트가 발생했을 때 호출될 함수
+- 이벤트 핸들러 등록 : 이벤트가 발생했을 때 브라우저에게 이벤트 핸들러의 호출을 위임하는 것
+- 이벤트 드리븐 프로그래밍 : (event-driven programming) 이벤트와 이벤트 핸들러를 통해 사용자와 애플리케이션을 상호작용(interaction)시켜 프로그램의 흐름을 이벤트 중심으로 제어하는 프로그래밍 방식
+- DOMContentLoaded vs. load
+  DOM 생성이 완료되었을 때 / DOMContentLoaded 이벤트가 발생한 후, 모든 리소스(이미지, 폰트 등) 로딩이 완료되었을 때
+
+## 이벤트 핸들러 등록 방법
+
+1. 이벤트 핸들러 어트리뷰트 방식
+
+```js
+<!DOCTYPE html>
+<html>
+  <body>
+    <button onclick="greeting('John')">Click</button>
+    <script>
+      function greeting(name) {
+        console.log(`Good morning, ${name}.`);
+      }
+    </script>
+  </body>
+</html>
+```
+- 이벤트 핸들러 어트리뷰트 이름 : on + 이벤트타입
+- 이벤트 핸들러 어트리뷰트 값으로 함수 호출문 등의 '문'을 할당하면 이벤트 핸들러가 등록된다. 이때 어트리뷰트 값은 암묵적으로 생성된 이벤트 핸들러의 함수 몸체를 의미한다.
+
+2. 이벤트 핸들러 프로퍼티 방식
+
+```js
+<!DOCTYPE html>
+<html>
+  <body>
+    <button>Click me!</button>
+    <script>
+      const $button = document.querySelector('button');
+
+      $button.onclick = function () {
+        console.log('button click');
+      };
+    </script>
+  </body>
+</html>
+```
+- 이벤트 핸들러 프로퍼티에 함수를 바인딩하면 이벤트 핸들러 등록
+- `$button` : 이벤트 타겟 (이벤트를 발생시킬 객체)
+- `onclick` : on+이벤트타입
+- `function(){}` : 이벤트 핸들러
+- 하나의 이벤트에 하나의 핸들러만 바인딩할 수 있다.
+- 반드시 이벤트 타깃에만 바인딩할 수 있는 것은 아니다. 이벤트 타깃 또는 전파된 이벤트를 캐치할 DOM 노드 객체에 바인딩한다.
+
+3. addEventListener 메서드 방식
+
+```js
+<!DOCTYPE html>
+<html>
+  <body>
+    <button>Click me!</button>
+    <script>
+      const $button = document.querySelector('button');
+
+      $button.addEventListener('click', function () {
+        console.log('button click');
+      });
+    </script>
+  </body>
+</html>
+```
+- 이벤트 핸들러를 인수로 전달
+- `$button` : 이벤트 타겟
+- `click` : 이벤트 타입
+- `function(){}` : 이벤트 핸들러
+- 하나 이상의 이벤트 핸들러를 등록할 수 있다.
+
+## 이벤트 핸들러 제거
+
+- addEventListener 메서드로 등록한 이벤트 핸들러는 EventTarget.prototype.removeEventListener 메서드로 제거 (단, addEventListener 메서드에 전달한 인수와 removeEventListener 메서드에 전달한 인수가 일치하지 않으면 제거되지 않는다. 따라서 무명 함수를 이벤트 핸들러로 등록한 경우 제거할 수 없다.)
+
+```js
+<!DOCTYPE html>
+<html>
+  <body>
+    <button>Click me!</button>
+    <script>
+      const $button = document.querySelector('button');
+      const handleClick = () => console.log('button click');
+
+      $button.addEventListener('click', handleClick);
+
+      $button.removeEventListener('click', handleClick, true); // 실패
+      $button.removeEventListener('click', handleClick); // 성공
+    </script>
+  </body>
+</html>
+```
+
+## 이벤트 객체
+
+이벤트가 발생하면 이벤트에 관련한 다양한 정보를 담고 있는 이벤트 객체가 동적으로 생성되고, 생성된 이벤트 객체는 이벤트 핸들러의 첫 번째 인수로 전달된다.
+
+### 이벤트 객체의 상속 구조
+
+이벤트가 발생하면 이벤트 타입에 따라 생성자 함수에 의해 암묵적으로 이벤트 객체가 생성되고, 생성된 이벤트 객체는 프로토타입 체인에 포함된다.
+
+## 이벤트 전파
+
+이벤트 전파 : (event propagation) DOM 트리 상에 존재하는 DOM 요소 노드에서 발생한 이벤트가 이벤트 타깃을 중심으로 DOM 트리를 통해 전파되는 현상  
+따라서 이벤트는 이벤트 타깃과 상위 DOM 요소에서도 캐치할 수 있다.  
+
+- 캡처링 단계 : (capturing phase) 이벤트가 상위 요소에서 하위 요소 방향으로 전파
+- 타깃 단계 : (target phase) 이벤트가 이벤트 타깃에 도달
+- 버블링 단계 : (bubbling phase) 이벤트가 하위 요소에서 상위 요소 방향으로 전파
+
+## 이벤트 위임
+
+상위 요소에 이벤트 핸들러를 등록하고 하위 요소에서 제한적으로 이벤트가 발생하도록 조정한다.
+
+## DOM 요소의 기본 동작 조작
+
+- DOM 요소의 기본 동작 중단 : preventDefault 메서드
+- 이벤트 전파 방지 : stopPropagation 메서드 (자신에게 바인딩된 이벤트 핸들러만 실행되도록 한다.)
+
+## 이벤트 핸들러 내부의 this
+
+이벤트 핸들러 어트리뷰트의 값은 암묵적으로 생성되는 이벤트 핸들러의 문이다. 따라서 이벤트 핸들러 함수는 일반 함수로 호출되므로 this는 전역 객체 window를 가리킨다.  
+단, 이벤트 핸들러를 호출할 때 '인수로 전달한' this는 이벤트를 바인딩한 DOM 요소를 가리킨다.  
+
+이벤트 핸들러 프로퍼티 방식, addEventListener 메서드 방식 모두 이벤트 핸들러 내부의 this는 이벤트를 바인딩한 DOM 요소를 가리킨다.
+
+## 이벤트 핸들러에 인수 전달
+
+이벤트 핸들러 프로퍼티 방식, addEventListener 메서드 방식은 이벤트 핸들러를 브라우저가 호출하기 때문에 함수 자체를 등록해야 한다. 따라서 이벤트 핸들러 내부에서 함수를 호출하면서 인수를 전달하는 방식을 사용한다.
+(클로저)
+
+```js
+<!DOCTYPE html>
+<html>
+  <body>
+    <label>User name <input type='text'></label>
+    <em class="message"></em>
+    <script>
+      const MIN_USER_NAME_LENGTH = 5; // 이름 최소 길이
+      const $input = document.querySelector('input[type=text]');
+      const $msg = document.querySelector('.message');
+
+      const checkUserNameLength = min => {
+        $msg.textContent
+          = $input.value.length < min ? `이름은 ${min}자 이상 입력해 주세요` : '';
+      };
+
+      // 이벤트 핸들러 내부에서 함수를 호출하면서 인수 전달
+      $input.onblur = () => {
+        checkUserNameLength(MIN_USER_NAME_LENGTH);
+      };
+    </script>
+  </body>
+</html>
+```
+
+*`transform: translate3d(x, y, z)` : GPU 가속을 사용해 GPU 메모리에서 관련 작업을 진행하기 때문에 매우 빠르다. 반복적인 레이아웃, 페인트 단계가 없어지기 때문에 성능 면에서도 좋다.  
+
+*클로저와 커링(curring)
+
+---
+
+# 타이머
+
+- 호출 스케줄링 : (scheduling a call) 함수를 명시적으로 호출하지 않고 일정 시간 후 호출되도록 타이머 함수를 통해 함수 호출을 예약하는 것
+- 자바스크립트 엔진은 싱글 스레드 방식으로 동작하기 때문에 타이머 함수 setTimeout, setInterval은 비동기 처리 방식으로 동작한다.
+
+## 타이머 함수
+
+### setTimeout / clearTimeout
+
+setTimeout 함수는 두 번째 인수로 전달받은 시간으로 단 한 번 동작하는 타이머를 생성하고, 타이머가 만료되면 첫 번째 인수로 전달받은 콜백 함수가 호출된다.  
+clearTimeout 함수는 호출 스케줄링을 취소한다. setTimeout 함수가 반환한 타이머 id를 clearTimeout 함수의 인수로 전달하여 타이머를 취소할 수 있다.
+
+```js
+const timerId = setTimeout(() => console.log('Hi!'), 1000);
+
+clearTimeout(timerId);
+```
+
+```js
+const timeoutId = setTimeout(func, delay, param1, param2, ...);
+```
+- func : 타이머가 만료된 뒤 호출될 콜백 함수
+- delay : 타이머 만료 시간 (/ms)
+- params : 호출 스케줄링된 콜백 함수에 전달해야 할 인수가 존재하는 경우
+
+### setInterval / clearInterval
+
+setInterval 함수는 두 번째 인수로 전달받은 시간으로 반복 동작하는 타이머를 생성하고 타이머가 만료될 때마다 첫 번째 인수로 전달받은 콜백 함수가 반복 호출된다. (타이머가 취소될 때까지)  
+clearInterval 함수는 호출 스케줄링을 취소한다. setInterval 함수가 반환한 타이머 id를 clearInterval 함수의 인수로 전달하여 타이머를 취소할 수 있다.  
+
+```js
+let count = 1;
+
+const timeoutId = setInterval(() => {
+  console.log(count); // 1 2 3 4 5
+  if (count++ === 5) clearInterval(timeoutId);
+}, 1000);
+```
+
+```js
+const timerId = setInterval(func, delay, param1, param2, ...);
+```
+- func : 타이머가 만료된 뒤 호출될 콜백 함수
+- delay : 타이머 만료 시간 (/ms)
+- params : 호출 스케줄링된 콜백 함수에 전달해야 할 인수가 존재하는 경우
+
+## 디바운스와 스로틀
+
+짧은 시간 간격으로 연속해서 발생하는 이벤트를 그룹화해서 과도한 이벤트 핸들러의 호출을 방지하는 프로그래밍 기법
+(타이머 함수를 기억하는 클로저를 반환한다.)
+
+### 디바운스 (debounce)
+
+짧은 시간 간격으로 발생하는 이벤트를 그룹화해서 마지막에 한 번만 이벤트 핸들러가 호출되도록 한다.
+(짧은 시간 간격으로 이벤트가 연속해서 발생하면 이벤트 핸들러를 호출하지 않다가 일정 시간이 경과한 후 이벤트 핸들러 한 번 호출)
+
+```js
+const debounce = (callback, delay) => {}
+```
+- 이벤트가 delay 시간보다 짧은 간격으로 발생하면 이전 타이머를 취소하고 새로운 타이머를 재설정하여 콜백 함수 호출을 막는다.
+*input  
+*실무에서는 Underscore 또는 Lodash의 debounce 함수 사용 권장
+
+### 스로틀 (throttle)
+
+짧은 시간 간격으로 연속해서 발생하는 이벤트를 그룹화해서 일정 시간 단위로 이벤트 핸들러가 호출되도록 호출 주기를 만든다.
+(짧은 시간 간격으로 이벤트가 연속해서 발생하더라도 일정 시간 간격으로 이벤트 핸들러가 최대 한 번만 호출되도록 한다.)
+
+```js
+const throttle = (callback, delay) => {
+  let timerId;
+  return event => {
+    if (timerId) return;
+    timerId = setTimeout(() => {
+      callback(event);
+      timerId = null;
+    }, delay, event);
+  };
+};
+```
+- delay 시간이 경과했을 때 이벤트가 발생하면 콜백 함수를 호출하고 새로운 타이머를 재설정한다. (= delay 시간 간격으로 콜백 함수가 호출된다.)
+- 무한 스크롤 UI, 스크롤 이벤트 처리에 사용된다.
+**실무에서는 Underscore 또는 Lodash의 throttle 함수 사용 권장
+
+---
+
+# 비동기 프로그래밍
+
+## 동기 처리와 비동기 처리
+
+자바스크립트 엔진은 싱글 스레드(single thread) 방식으로 동작한다.  
+한 번에 하나의 태스크만 실행 가능하기 때문에 시간이 오래 걸리는 태스크를 실행할 경우 블로킹(blocking, 작업 중단)이 발생한다.
+
+- 동기 처리 : (synchronous) 실행 중인 태스크가 종료될 때까지 다음 실행될 태스크가 대기하는 방식
+  - 장점 : 실행 순서가 보장된다.
+  - 단점 : 앞선 태스크가 종료될 때까지 다음 태스크가 블로킹된다.
+- 비동기 처리 : (asynchronous) 현재 실행 중인 태스크가 종료하지 않아도 다음 태스크를 실행하는 방식 (EX. setTimeout 함수)
+  - 장점 : 블로킹이 발생하지 않는다.
+  - 단점 : 실행 순서가 보장되지 않는다.
+
+- 비동기 함수는 전통적으로 콜백 패턴을 사용하나 비동기 처리를 위한 콜백 패턴은 콜백 헬을 발생시킨다. 
+- 타이머함수 setTimeout, setInterval, HTTP 요청, 이벤트 핸들러는 비동기 처리 방식으로 동작한다.
+
+## 이벤트 루프와 태스크 큐
+
+자바스크립트의 동시성을 지원하는 것이 이벤트 루프(event loop, 브라우저 내장 기능)
+
+**자바스크립트 엔진의 구조**  
+- 콜 스택(call stack, 실행 컨텍스트 스택)
+  - 소스코드 평가 과정에서 생성된 실행 컨텍스트가 추가되고 제거되는 스택 자료구조 
+  - 함수를 호출하면 함수 실행 컨텍스트가 순차적으로 콜 스택에 푸시되어 실행된다. 자바스크립트 엔진은 실행 중인 실행 컨텍스트가 종료되어 콜 스택에서 제거되기 전까지 다른 어떤 태스크도 실행하지 않는다.
+- 힙(heap)
+  - 자바스크립트의 모든 값이(원시값도 객체인 실행 컨텍스트에 저장되기 때문) 저장되는 메모리 공간. 실행 컨텍스트는 힙에 저장된 객체를 참조한다. 구조화되어 있지 않다.
+  - 메모리에 값을 저장하려면 값을 저장할 메모리 공간의 크기를 결정해야 하지만 객체는 크기가 정해져 있지 않으므로 할당해야 할 메모리 공간의 크기를 런타임에 결정(동적 할당)해야 하기 때문이다.
+
+자바스크립트 엔진은 태스크가 요청되면 콜 스택을 통해 요청된 작업을 순차적으로 처리한다.
+소스코드 평가, 실행을 제외한 비동기 처리는 브라우저 or Node.js가 담당한다.
+(이를 위해 브라우저는 태스크 큐, 이벤트 루프 제공) 
+
+- 태스크 큐(task queue/event queue/callback queue)
+  - 비동기 함수의 콜백 함수 또는 이벤트 핸들러가 일시적으로 보관되는 영역
+- 이벤트 루프(event loop)
+  - 콜 스택에 현재 실행 중인 실행 컨텍스트가 있는지, 태스크 큐에 대기 중인 함수(콜백 함수, 이벤트 핸들러 등)가 있는지 반복해서 확인한다. 콜 스택이 비어 있고 태스크 큐에 대기 중인 함수가 있다면 이벤트 루프는 순차적(FIFO, First In First Out)으로 태스크 큐에 대기 중인 함수를 콜 스택으로 이동시킨다. (콜 스택으로 이동한 함수는 실행된다.)
+  - 즉, 태스크 큐에 일시 보관된 함수들은 비동기 처리 방식으로 동작한다.
+
+브라우저 내부의 자바스크립트 엔진은 싱글 스레드로 동작하지만 브라우저는 멀티 스레드로 동작하기 때문에 비동기 처리가 가능하다.  
+
+---
+
+# Ajax
+
+**Ajax(Asynchronous Javascript And XML)**  
+- 자바스크립트를 사용하여 브라우저가 서버에게 비동기 방식으로 데이터를 요청하고, 서버가 응답한 데이터를 수신하여 웹페이지를 동적으로 갱신하는 프로그래밍 방식
+- Ajax는 브라우저에서 제공하는 Web API인 XMLHttpRequest 객체를 기반으로 동작한다. (XMLHttpRequest는 HTTP 비동기 통신을 위한 메서드와 프로퍼티 제공)
+- 장점
+  - 변경할 부분을 갱신하는 데 필요한 데이터만 서버로부터 전송받기 때문에 불필요한 데이터 통신이 발생하지 않는다.
+  - 변경할 필요가 없는 부분은 다시 렌더링하지 않는다. (화면이 순간적으로 깜박이는 현상이 발생하지 않는다.)
+  - 클라이언트와 서버가 비동기적으로 통신하기 때문에 서버에게 요청을 보낸 후 블로킹이 발생하지 않는다.
+
+## JSON
+
+JSON : (JavaScript Object Notation) 클라이언트와 서버 간의 HTTP 통신을 위한 텍스트 데이터 포맷
+
+- JSON.stringify 메서드 : 객체를 JSON 포맷의 문자열로 변환 (serializing, 클라이언트가 서버로 객체를 전송하려면 객체를 문자열화해야 하기 때문)
+- JSON.parse 메서드 : JSON 포맷의 문자열을 객체로 변환 (deserializing, 서버로부터 클라이언트에게 전달된 문자열 형태의 JSON 데이터를 객체화)
+
+## XMLHttpRequest
+
+브라우저에서 제공하는 Web API로 HTTP 요청 전송 및 응답 수신을 위한 메서드와 프로퍼티 제공 (브라우저 환경에서만 정상 작동)
+
+### HTTP 요청 전송
+
+1. XMLHttpRequest.prototype.open 메서드로 HTTP 요청을 초기화한다.
+2. 필요에 따라 XMLHttpRequest.prototype.setRequestHeader 메서드로 특정 HTTP 요청의 헤더 값을 설정한다.
+3. XMLHttpRequest.prototype.send 메서드로 HTTP 요청을 전송한다.
+
+```js
+// XMLHttpRequest 객체 생성
+const xhr = new XMLHttpRequest();
+
+// HTTP 요청 초기화
+xhr.open('GET', '/users');
+
+// HTTP 요청 헤더 설정
+// 클라이언트가 서버로 전송할 데이터의 MIME 타입 지정: json
+xhr.setRequestHeader('content-type', 'application/json');
+
+// HTTP 요청 전송
+xhr.send();
+```
+
+**XMLHttpRequest.prototype.open 메서드**  
+
+```js
+xhr.open(method, url, async)
+```
+- method : HTTP 요청 메서드 
+  - GET : 모든/특정 리소스 취득
+  - POST : 리소스 생성 (페이로드 O)
+  - PUT : 리소스 전체 교체 (페이로드 O)
+  - PATCH : 리소스 일부 수정 (페이로드 O)
+  - DELETE : 모든/특정 리소스 삭제
+- url : HTTP 요청을 전송할 URL
+- async : (옵션) 비동기 요청 여부 (기본값 : true)
+
+**XMLHttpRequest.prototype.send 메서드**  
+
+```js
+xhr.send(JSON.stringify({ id: 1, content: 'HTML', completed: false }));
+```
+- open 메서드로 초기화된 HTTP 요청을 서버에 전송
+- 전송 방식
+  - GET : 데이터를 URL의 일부인 쿼리 문자열로 서버에 전송
+  - POST : 데이터를 요청 몸체(request body)에 담아 전송
+
+*MIME 타입   
+클라이언트에게 전송된 문서의 다양성을 알려주기 위한 메커니즘  
+브라우저는 리소스를 내려받았을 때 해야 할 기본 동작이 무엇인지를 결정하기 위해 MIME 타입을 사용한다.
+
+---
+
+# REST API
+
+- REST : HTTP를 기반으로 클라이언트가 서버의 리소스에 접근하는 방식을 규정한 아키텍처
+- REST API : REST를 기반으로 서비스 API를 구현한 것
+
+## REST API의 구성
+
+
 
 # 참조
 
