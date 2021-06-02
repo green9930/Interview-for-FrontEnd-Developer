@@ -26,6 +26,9 @@
 [24. 타이머](#타이머)
 [25. 비동기 프로그래밍](#비동기-프로그래밍)
 [26. Ajax](#Ajax)
+[27. REST API](#REST-API)
+[28. 프로미스](#프로미스)
+[29. async/await](#async/await)
 
 ---
 
@@ -89,7 +92,7 @@ HTML, CSS, JavaScript등 문서를 해석해서 브라우저에 시각적으로 
 
 ## 리액트를 사용하는 이유
 
-컴포넌트 단위로 구성 -> 컴포넌트 일괄 수정 rksmd 
+컴포넌트 단위로 구성 -> 컴포넌트 일괄 수정 가능 
 유지보수, 생산성 용이  
 JSX를 제공하기 때문 : HTML을 알아도 어느정도 코드 작성이 가능하다는 점  
 Virtual DOM : 리액트에서 가장 성공적으로 적용  
@@ -170,7 +173,7 @@ console.log(result); // 10
   const bar; // SyntaxError: Missing initializer in const declaration
   ```
 
-**var vs. let/const**
+**var vs. let/const**  
 
 1. 스코프 내부 중복 선언
 
@@ -2264,10 +2267,26 @@ DOM은 HTML 문서의 계층적 구조와 정보를 표현하고 노드  타입�
 
 - 대신 스프레드 문법을 사용해 배열로 변환해서 사용하는 것을 권장
 
-### textContent vs. innerHTML
+### innerText vs. textContent vs. innerHTML
+
+- innerText : 해당 요소 노드에서 사용자에게 보여지는 텍스트를 불러온다. (EX. `display: none` 처리된 텍스트는 불러오지 않음)
+- textContent : 요소 노드를 렌더링하지 않으며 해당 노드가 가지고 있는 텍스트 값을 그대로 불러온다. (EX. `display: none` 처리된 텍스트도 불러옴)
+- innerHTML : HTML에서 요소 노드까지 반환한다. 
+
+**innerHTML의 단점**  
+1. 크로스 사이트 스크립팅 공격(XSS, Cross-Site Scripting Attacks)에 취약하다.
+2. innerHTML 프로퍼티에 HTML 마크업 문자열을 할당하는 경우 요소 노드의 모든 자식 노드를 제거하고 할당한 HTML 마크업 문자열을 파싱하여 DOM을 변경한다. 
+3. 새로운 요소를 삽입할 때 삽입될 위치를 지정할 수 없다. 
 
 ### HTML Attribute vs. DOM 프로퍼티
 
+요소 노드 객체에는 HTML 어트리뷰트에 대응하는 DOM 프로퍼티가 존재하고, 이 프로퍼티들은 HTML 어트리뷰트의 값을 초기값으로 갖고 있다.  
+
+요소 노드는 (1)초기 상태, (2)최신 상태 즉, 두 개의 상태를 관리해야 한다.  
+- 어트리뷰트 노드 : 요소 노드의 초기 상태 관리
+  - 어트리뷰트 노드에서 관리하는 값은 사용자 입력에 의해 상태가 변하지 않고 초기 상태를 유지한다.
+- DOM 프로퍼티 : 요소 노드의 최신 상태 관리
+  - 사용자 입력에 의한 상태 변화에 반응하여 최신 상태를 유지한다. 
 
 ---
 
@@ -2374,6 +2393,9 @@ DOM은 HTML 문서의 계층적 구조와 정보를 표현하고 노드  타입�
 ## 이벤트 객체
 
 이벤트가 발생하면 이벤트에 관련한 다양한 정보를 담고 있는 이벤트 객체가 동적으로 생성되고, 생성된 이벤트 객체는 이벤트 핸들러의 첫 번째 인수로 전달된다.
+
+- currentTarget	: 이벤트 핸들러가 바인딩된 DOM 요소
+- target : 이벤트를 발생시킨 DOM 요소
 
 ### 이벤트 객체의 상속 구조
 
@@ -2500,7 +2522,7 @@ const timerId = setInterval(func, delay, param1, param2, ...);
 const debounce = (callback, delay) => {}
 ```
 - 이벤트가 delay 시간보다 짧은 간격으로 발생하면 이전 타이머를 취소하고 새로운 타이머를 재설정하여 콜백 함수 호출을 막는다.
-*input  
+*input, 버튼 중복 클릭 방지   
 *실무에서는 Underscore 또는 Lodash의 debounce 함수 사용 권장
 
 ### 스로틀 (throttle)
@@ -2648,7 +2670,511 @@ xhr.send(JSON.stringify({ id: 1, content: 'HTML', completed: false }));
 
 ## REST API의 구성
 
+REST는 자체 표현 구조(self-descriptiveness)로 구성되어 REST API만으로 HTTP 요청의 내용을 이해할 수 있다.
 
+| 구성 요소               | 내용                | 표현 방법       |
+|---------------------|-------------------|-------------|
+| 자원 (resource)       | 자원                | URI(엔드 포인트) |
+| 행위 (verb)           | 자원에 대한 행위         | HTTP 요청 메서드 |
+| 표현 (representation) | 지원에 대한 행위의 구체적 내용 | 페이로드        |
+
+## REST API 설계 원칙
+
+URI는 리소스를 표현하는데 집중하고 행위에 대한 정의는 HTTP 요청 메서드(클라이언트가 서버에 요청의 종류와 리소스에 대한 행위를 알리는 방법)를 통해 하는 것이 RESTful API를 설계하는 중심 규칙
+
+1. URI는 리소스를 표현해야 한다. 리소스를 식별할 수 있는 이름은 명사를 사용한다.
+2. 리소스에 대한 행위는 HTTP 요청 메서드로 표현한다. (CRUD 구현 방식)
+
+| HTTP 요청 메서드 |       종류       |      목적      | 페이로드 |
+|:-----------:|:--------------:|:------------:|:----:|
+|     GET     | index/retrieve | 모든/특정 리소스 취득 |  X   |
+|    POST     |     create     |    리소스 생성    |  O   |
+|     PUT     |    replace     |  리소스의 전체 교체  |  O   |
+|    PATCH    |     update     |  리소스의 일부 수정  |  O   |
+|   DELETE    |     delete     | 모든/특정 리소스 삭제 |  X   |
+
+**npm (node package manager)**    
+node.js에서 사용할 수 있는 모듈들을 패키지화하여 모아둔 저장소
+
+---
+
+# 프로미스
+
+ES6에서 도입된 비동기 **처리 상태**와 **처리 결과**를 반환하는 객체
+
+## 프로미스 도입 이유
+
+자바스크립트의 비동기 처리를 위한 기존 콜백 함수에 한계가 존재했기 때문이다.   
+비동기 함수 : 외부 함수 내부에서 비동기적으로 동작하는 코드를 포함한 함수  
+
+1. 콜백 헬 발생
+  비동기 함수 내부의 비동기로 동작하는 코드는 비동기 함수가 종료된 이후에 완료되므로, 내부 비동기 코드에서 처리 결과를 외부로 반환하거나 상위 스코프의 변수에 할당할 수 없다.  
+  따라서 비동기 함수의 처리 결과(서버의 응답 등)에 대한 후속 처리는 비동기 함수 내부에서 수행해야 하는데 비동기 함수에 비동기 처리 결과에 대한 후속 처리를 수행하는 (비동기 처리가 성공/실패하면 호출될) 콜백 함수를 전달하는 것이 일반적이다.  
+  이때 비동기 처리를 통해 다시 비동기 함수를 호출하는 일이 발생하면 복잡도가 높아지면서 콜백 헬이 발생하게 된다.  
+2. 에러 처리에 한계 존재
+  (try... catch...finally문에서) try문 내 setTimeout 함수의 콜백 함수가 실행될 때 setTimeout 함수는 이미 콜 스택에서 제거된 상태이다. 따라서 콜백 함수의 호출자는 setTimeout 함수가 아니다. 에러는 호출자(caller) 방향으로 전파되므로 콜백함수가 발생시킨 에러는 catch 블록에서 캐치되지 않는다.
+
+## 프로미스 생성
+
+프로미스(Promise)는 ECMAScript 사양에 정의된 표준 필트인 객체로 Promise 생성자 함수를 new 연산자와 함께 호출하면 프로미스 객체를 생성한다. 
+
+```js
+const promise = new Promise((resolve, reject) => {
+  if (/* success */) {
+    resolve('result');
+  } else { /* fail */
+    reject('failure reason');
+  }
+});
+```
+- Promise 생성자 함수는 비동기 처리를 수행할 콜백 함수를 인수로 전달받고, 콜백 함수는 resolve와 reject 함수를 인수로 전달받는다.
+- 비동기 처리가 성공하면 resolve 함수 호출
+- 비동기 처리가 실패하면 reject 함수 호출
+- 프로미스는 현재 비동기 처리 진행 상태 정보를 갖는다. (pending상태에서 settled상태(비동기 처리가 수행되어 pending이 아닌 상태 fulfilled / rejected)로 변화하면 다른 상태로 변할 수 없다.)
+  1. pending : 비동기 처리가 아직 수행되지 않은 상태 (프로미스 생성 직후 기본 상태)
+  2. fulfilled : 비동기 처리 성공 (resolve 함수 호출)
+  3. rejected : 비동기 처리 실패 (reject 함수 호출)
+
+## 프로미스의 후속 처리 메서드
+
+프로미스의 비동기 처리 상태가 변화하면 후속 처리 메서드에 인수로 전달한 콜백 함수가 선택적으로 호출되고 프로미스의 '처리 결과'가 인수로 전달된다. 모든 후속 처리 메서드는 비동기적으로 동작하며 언제나 프로미스를 반환한다.
+
+1. Promise.prototype.then
+  ```js
+  // fulfilled
+  new Promise(resolve => resolve('fulfilled'))
+    .then(v => console.log(v), e => console.error(e)); // fulfilled
+
+  // rejected
+  new Promise((_, reject) => reject(new Error('rejected')))
+    .then(v => console.log(v), e => console.error(e)); // Error: rejected
+  ```
+  - 두 개의 콜백 함수를 인수로 전달받는다.
+    1. 성공 처리 콜백 함수 : 프로미스가 fulfilled 상태일 때 호출되며 이때 콜백 함수는 프로미스의 비동기 처리 결과를 인수로 전달받는다.
+    2. 실패 처리 콜백 함수 : 프로미스가 rejected 상태일 때 호출되며 이때 콜백 함수는 프로미스의 에러를 인수로 전달받는다.
+2. Promise.prototype.catch
+  ```js
+  // rejected
+  new Promise((_, reject) => reject(new Error('rejected')))
+    .catch(e => console.log(e)); // Error: rejected
+  ```
+  - 한 개의 콜백 함수를 인수로 전달받는다.
+    1. 실패 처리 콜백 함수 : 프로미스가 reject 상태일 때 호출된다.
+  - catch 메서드를 호출하면 내부적으로 `then(undefined, onRejected)`를 호출한다.
+3. Promise.prototype.finally
+  ```js
+  new Promise(() => {})
+    .finally(() => console.log('finally')); // finally
+  ```
+  - 한 개의 콜백 함수를 인수로 전달받는다. 
+    1. 프로미스의 성공/실패 여부와 상관없이 무조건 한 번 호출되므로 프로미스 상태와 관계없이 공통적으로 수행해야 할 처리 내용이 있을 때 사용된다.
+
+```js
+const promiseGet = url => {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.send();
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        // 성공적으로 응답을 전달받으면 resolve 함수를 호출한다.
+        resolve(JSON.parse(xhr.response));
+      } else {
+        // 에러 처리를 위해 reject 함수를 호출한다.
+        reject(new Error(xhr.status));
+      }
+    };
+  });
+};
+
+// promiseGet 함수는 프로미스를 반환한다.
+promiseGet('https://jsonplaceholder.typicode.com/posts/1')
+  .then(res => console.log(res))
+  .catch(err => console.error(err))
+  .finally(() => console.log('Bye!'));
+```
+
+## 프로미스의 에러 처리
+
+비동기 처리에서 발생한 에러 처리 방법 (가독성 측면에서 catch 메서드 사용을 권장한다.)
+
+1. then 메서드의 두 번째 콜백 함수
+  ```js
+  const wrongUrl = 'https://jsonplaceholder.typicode.com/XXX/1';
+
+  promiseGet(wrongUrl).then(
+    res => console.log(res),
+    err => console.error(err)
+  ); // Error: 404
+  ```
+2. catch 메서드
+  ```js
+  const wrongUrl = 'https://jsonplaceholder.typicode.com/XXX/1';
+
+  // 부적절한 URL이 지정되었기 때문에 에러가 발생한다.
+  promiseGet(wrongUrl)
+    .then(res => console.log(res))
+    .catch(err => console.error(err)); // Error: 404
+  ```
+
+## 프로미스 체이닝 (promise chaining)
+
+- then/catch/finally 후속 처리 메서드가 언제나 프로미스를 반환하기 대문에 연속적으로 호출 가능한데 이 구조를 프로미스 체이닝이라 한다.
+- async/await 사용 권장
+
+```js
+const url = 'https://jsonplaceholder.typicode.com';
+
+// id가 1인 post의 userId를 취득
+promiseGet(`${url}/posts/1`)
+  // 취득한 post의 userId로 user 정보를 취득
+  .then(({ userId }) => promiseGet(`${url}/users/${userId}`))
+  .then(userInfo => console.log(userInfo))
+  .catch(err => console.error(err));
+```
+- then
+  - 콜백 함수의 인수 : promiseGet 함수가 반환한 프로미스가 resolve한 값(id가 1인 post)
+  - 후속 처리 메서드의 반환값 : 콜백 함수가 반환한 프로미스
+- then
+  - 콜백 함수의 인수 : 첫 번째 then 메서드가 반환한 프로미스가 resolve한 값(post의 userId로 취득한 user 정보)	
+  - 후속 처리 메서드의 반환값 : 콜백 함수가 반환한 값(undefined)을 resolve한 프로미스
+- catch (에러가 발생하지 않으면 호출되지 않음)
+  - 콜백 함수의 인수 : promiseGet 함수 또는 앞선 후속 처리 메서드가 반환한 프로미스가 reject한 값
+  - 후속 처리 메서드의 반환값 : 콜백 함수가 반환한 값(undefined)을 resolve한 프로미스
+
+## 프로미스의 정적 메서드
+
+1. Promise.resolve / Promise.reject
+  - 이미 존재하는 값을 래핑하여 프로미스를 생성하기 위해 사용한다.
+  ```js
+  // 배열을 resolve하는 프로미스를 생성
+  const resolvedPromise = Promise.resolve([1, 2, 3]);
+  resolvedPromise.then(console.log); // [1, 2, 3]
+  ```
+  ```js
+  // 에러 객체를 reject하는 프로미스를 생성
+  const rejectedPromise = Promise.reject(new Error('Error!'));
+  rejectedPromise.catch(console.log); // Error: Error!
+  ```
+2. Promise.all
+  - 순차적으로 처리할 필요 없이 개별적으로 수행되는 다수의 비동기 처리를 모두 병렬 처리할 때 사용한다.
+  - 프로미스를 요소로 갖는 배열 등 이터러블을 인수로 전달받는다.
+  - 인수로 전달받은 배열의 모든 프로미스가 fulfilled 상태가 되면 종료한다. 
+  - 첫 번째 프로미스가 resolve한 처리 결과부터 차례대로 배열에 저장해 그 배열을 resolve하는 '새로운 프로미스'를 반환하므로 **처리 순서가 보장된다.**  
+  - 인수로 전달받은 배열의 프로미스가 하나라도 rejected 상태가 되면 즉시 종료한다.
+  ```js
+  const requestData1 = () => new Promise(resolve => setTimeout(() => resolve(1), 3000));
+  const requestData2 = () => new Promise(resolve => setTimeout(() => resolve(2), 2000));
+  const requestData3 = () => new Promise(resolve => setTimeout(() => resolve(3), 1000));
+
+  Promise.all([requestData1(), requestData2(), requestData3()])
+    .then(console.log) // [ 1, 2, 3 ] (약 3초 소요)
+    .catch(console.error);
+  ```
+3. Promise.race 
+  - 가장 먼저 fulfilled 상태가 된 프로미스의 처리 결과를 resolve하는 새로운 프로미스를 반환한다.
+  - 프로미스를 요소로 갖는 배열 등 이터러블을 인수로 전달받는다.
+  - 인수로 전달된 배열의 프로미스가 하나라도 rejected 상태가 되면 에러를 reject하는 새로운 프로미스를 즉시 반환한다.
+  ```js
+  Promise.race([
+    new Promise(resolve => setTimeout(() => resolve(1), 3000)), // 1
+    new Promise(resolve => setTimeout(() => resolve(2), 2000)), // 2
+    new Promise(resolve => setTimeout(() => resolve(3), 1000)) // 3
+  ])
+    .then(console.log) // 3
+    .catch(console.log);
+  ```
+  ```js
+  Promise.race([
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error 1')), 3000)),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error 2')), 2000)),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error 3')), 1000))
+  ])
+    .then(console.log)
+    .catch(console.log); // Error: Error 3
+  ```
+4. Promise.allSettled
+  - 전달받은 프로미스가 모두 settled 상태가 되면 처리 결과를 배열로 반환한다.
+  - 프로미스를 요소로 갖는 배열 등 이터러블을 인수로 전달받는다.
+  ```js
+  Promise.allSettled([
+    new Promise(resolve => setTimeout(() => resolve(1), 2000)),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error!')), 1000))
+  ]).then(console.log);
+  /*
+  [
+    {status: "fulfilled", value: 1},
+    {status: "rejected", reason: Error: Error! at <anonymous>:3:54}
+  ]
+  */
+  ```
+  - 프로미스가 fulfilled 상태인 경우 : 비동기 처리 상태를 나타내는 status 프로퍼티와 처리 결과를 나타내는 value 프로퍼티를 갖는다.
+  - 프로미스가 rejected 상태인 경우 : 비동기 처리 상태를 나타내는 status 프로퍼티와 에러를 나타내는 reason 프로퍼티를 갖는다.
+
+## 마이크로태스크 큐
+
+- 태스크 큐와 별도의 큐로 프로미스의 후속 처리 메서드의 콜백 함수가 임시 저장된다. 
+- 마이크로태스크 큐는 태스크 큐보다 우선순위가 높기 때문에, 이벤트 루프는 콜 스택이 비면 먼저 마이크로태스크 큐에서 대기하는 함수를 가져와 실행한다.
+
+```js
+setTimeout(() => console.log(1), 0);
+
+Promise.resolve()
+  .then(() => console.log(2))
+  .then(() => console.log(3));
+```
+- 실행 순서 : 2 -> 3 -> 1
+- 프로미스의 후속 처리 메서드의 콜백 함수는 태스크 큐가 아니라 마이크로태스크 큐에 저장되기 때문이다.
+
+## fetch
+
+```js
+const promise = fetch(url [, options])
+```
+- HTTP 요청 전송 기능을 제공하는 클라이언트 사이드 WEB API
+- fetch 함수에 HTTP 요청을 전송할 URL, HTTP 요청 메서드, HTTP 요청 헤더, 페이로드 등을 설정한 객체를 전달한다.
+- fetch 함수는 HTTP 응답을 나타내는 Response 객체를 래핑한 Promise 객체를 반환한다.
+  ```js
+  fetch('https://jsonplaceholder.typicode.com/todos/1')
+    .then(response => console.log(response));
+  ```
+  - Response.prototype에는 Response 객체에 포함되어 있는 HTTP 응답 몸체를 위한 다양한 메서드를 제공한다.
+- fetch 함수가 반환하는 프로미스는 HTTP 에러가 발생해도 에러를 reject하지 않고, 불리언 타입의 ok 상태를 false로 설정한 Response 객체를 resolve한다. 오프라인 등의 네트워크 장애나 CORS 에러에 의해 요청이 완료되지 못한 경우에만 프로미스를 reject하기 때문에 ok 상태를 확인해 명시적으로 에러를 처리해야 한다.
+- axios는 HTTP 에러를 reject하는 프로미스를 반환한다. 
+
+1. GET 요청
+  ```js
+  request.get('https://jsonplaceholder.typicode.com/todos/1')
+    .then(response => {
+      if (!response.ok) throw new Error(response.statusText);
+      return response.json();
+    })
+    .then(todos => console.log(todos))
+    .catch(err => console.error(err));
+    // {userId: 1, id: 1, title: "delectus aut autem", completed: false}
+  ```
+2. POST 요청
+  ```js
+  request.post('https://jsonplaceholder.typicode.com/todos', {
+    userId: 1,
+    title: 'JavaScript',
+    completed: false
+  }).then(response => {
+      if (!response.ok) throw new Error(response.statusText);
+      return response.json();
+    })
+    .then(todos => console.log(todos))
+    .catch(err => console.error(err));
+  // {userId: 1, title: "JavaScript", completed: false, id: 201}
+  ```
+3. PATCH 요청
+  ```js
+  request.patch('https://jsonplaceholder.typicode.com/todos/1', {
+    completed: true
+  }).then(response => {
+      if (!response.ok) throw new Error(response.statusText);
+      return response.json();
+    })
+    .then(todos => console.log(todos))
+    .catch(err => console.error(err));
+  // {userId: 1, id: 1, title: "delectus aut autem", completed: true}
+  ```
+4. DELETE 요청
+  ```js
+  request.delete('https://jsonplaceholder.typicode.com/todos/1')
+    .then(response => {
+      if (!response.ok) throw new Error(response.statusText);
+      return response.json();
+    })
+    .then(todos => console.log(todos))
+    .catch(err => console.error(err));
+  // {}
+  ```
+
+---
+
+# async/await
+
+프로미스를 기반으로 동작하며, 프로미스의 then/catch/finally 후속 처리 메서드 없이 동기 처리처럼 프로미스가 처리 결과를 반환하도록 구현할 수 있다.
+
+## async 함수
+
+- async 함수는 async 키워드를 사용해 정의하며 언제나 프로미스를 반환한다. (명시적으로 프로미스를 반환하지 않더라도 암묵적으로 반환값을 resolve하는 프로미스 반환)
+- 클래스의 constructor는 인스턴스를 반환하기 때문에 async 메서드가 될 수 없다. 
+- await 키워드는 반드시 async 함수 내부에서 사용해야 한다.
+
+## await 키워드
+
+- 프로미스가 settled 상태가 될 때까지 대기하다가 settled 상태가 되면 프로미스가 resolve한 처리 결과를 반환한다.
+- 반드시 프로미스 앞에서 사용해야 한다.
+
+- 병렬 비동기 처리
+```js
+async function foo() {
+  const res = await Promise.all([
+    new Promise(resolve => setTimeout(() => resolve(1), 3000)),
+    new Promise(resolve => setTimeout(() => resolve(2), 2000)),
+    new Promise(resolve => setTimeout(() => resolve(3), 1000))
+  ]);
+
+  console.log(res); // [1, 2, 3]
+}
+
+foo(); // 약 3초 소요
+```
+
+- 직렬 비동기 처리
+```js
+async function bar(n) {
+  const a = await new Promise(resolve => setTimeout(() => resolve(n), 3000));
+  // 두 번째 비동기 처리를 수행하려면 첫 번째 비동기 처리 결과가 필요하다.
+  const b = await new Promise(resolve => setTimeout(() => resolve(a + 1), 2000));
+  // 세 번째 비동기 처리를 수행하려면 두 번째 비동기 처리 결과가 필요하다.
+  const c = await new Promise(resolve => setTimeout(() => resolve(b + 1), 1000));
+
+  console.log([a, b, c]); // [1, 2, 3]
+}
+
+bar(1); // 약 6초 소요
+```
+
+## 에러 처리
+
+- 프로미스를 반환하는 비동기 함수는 명시적으로 호출할 수 있기 때문에 호출자가 명확하다. 
+- async 함수 내에서 catch 문을 사용해서 에러 처리를 하지 않으면 async 함수는 발생한 에러를 reject하는 프로미스를 반환한다. 따라서 async 함수를 호출하고 Promise.prototype.catch 후속 처리 메서드를 사용해 에러를 캐치할 수도 있다.
+
+```js
+const fetch = require('node-fetch');
+
+const foo = async () => {
+  try {
+    const wrongUrl = 'https://wrong.url';
+
+    const response = await fetch(wrongUrl);
+    const data = await response.json();
+    console.log(data);
+  } catch (err) {
+    console.error(err); // TypeError: Failed to fetch
+  }
+};
+
+foo();
+```
+
+---
+
+# 에러 처리
+
+- 에러 처리는 예외적인 상황에 대처하기 위해 필요하다.
+
+## try...catch...finally 문
+
+```js
+try {
+  // 실행할 코드(에러가 발생할 가능성이 있는 코드)
+} catch (err) {
+  // try 코드 블록에서 에러가 발생하면 이 코드 블록의 코드가 실행된다.
+  // err에는 try 코드 블록에서 발생한 Error 객체가 전달된다.
+} finally {
+  // 에러 발생과 상관없이 반드시 한 번 실행된다.
+}
+```
+
+## Error 객체
+
+```js
+const error = new Error('invalid');
+```
+- Error 생성자 함수는 에러 객체를 생성하며 에러 메세지를 인수로 전달할 수 있다.
+- 자바스크립트의 Error 생성자 함수 종류 (Error.prototype 상속)
+  - Error : 일반적 에러 객체
+  - SyntaxError : 자바스크립트 문법에 맞지 않는 문을 해석할 때
+  - ReferenceError : 참조할 수 없는 식별자를 참조했을 때
+  - TypeError : 피연산자 또는 인수의 데이터 타입이 유효하지 않을 때
+  - RangeError : 숫자값의 허용 범위를 벗어났을 때
+  - URIError : encodeURI 또는 decodeURl 함수에 부적절한 인수를 전달했을 때
+  - EvalError : eval 함수에서 발생하는 에러 객체
+
+## throw 문
+
+```js
+try {
+  throw new Error('something wrong');
+} catch (error) {
+  console.log(error);
+}
+```
+- 에러를 발생시키면 try 코드 블록에서 throw 문으로 에러 객체를 던져야 한다.
+- 에러 객체를 던지면 catch 코드 블록이 실행되기 시작한다.
+
+## 에러의 전파
+
+- 에러는 호출자(caller) 방향 즉, 콜 스택의 아래 방향으로 전파된다.
+- throw된 에러를 어디에서도 캐치하지 않으면 프로그램은 강제 종료된다.
+- 비동기 함수(EX. setTimeout)나 프로미스 후속 처리 메서드의 콜백 함수는 호출자가 없다. 이들의 콜백 함수는 태스크 큐나 마이크로태스크 큐에 일시 저장되었다가 콜 스택이 비면 이벤트 루프에 의해 콜 스택으로 푸시되어 실행되는데 콜 스택에 푸시된 콜백 함수의 실행 컨텍스트는 콜 스택의 가장 하부에 존재하기 때문이다. 따라서 에러를 전파할 호출자가 존재하지 않는다.
+
+---
+
+# 모듈
+
+- 개념 : 애플리케이션을 구성하는 개별적 요소로서 재사용 가능한 코드 조각 (보통 기능을 기준으로 파일 단위로 분리)  
+- 모듈이 성립하려면 모듈은 자신만의 파일 스코프(모듈 스코프)를 가질 수 있어야 한다. 
+- 모듈의 모든 자산(모듈 내 변수, 함수, 객체 등)은 기본적으로 캡슐화되어 다른 모듈에서 접근할 수 없다. 
+- 모듈은 개별적 존재로서 애플리케이션과 분리되어 있으나 다른 모듈에 의해 재사용되기 위해 필요한 자산에 한해 선택적으로 공개(export)한다. 
+- 모듈 사용자는 모듈이 공개(export)한 자산 중 일부/전체를 선택해 자신의 스코프 내로 불러들여(import) 재사용한다.
+
+## 자바스크립트와 모듈 
+
+자바스크립트는 여러 개의 파일을 분리하더라도 하나의 자바스크립트 파일 내에 있는 것처럼 동작하기 때문에(하나의 전역 공유) 모듈을 구현할 수 없었고, 이를 해결하기 위해 등장한 것이 CommonJS와 AMD(Asynchronous Module Definition)이다.    
+
+- CommonJS : 동기 처리, AMD에 비해 간단한 문법
+- AMD : 비동기 처리  
+
+Node.js는 기본적으로 CommonJS 사양을 따르고 모듈 시스템을 지원하기 때문에 파일별로 독립적인 모듈 스코프를 갖는다.
+
+## ES6 모듈(ESM)
+
+ESM은 독자적인 모듈 스코프를 갖는다. ESM이 아닌 일반적인 자바스크립트 파일은 script 태그로 분리해서 로드해도 독자적인 모듈 스코프를 갖지 않는다. 
+
+## export 키워드
+
+모듈 내부에서 선언한 식별자를 외부의 다른 모듈이 재사용하기 위해 export 키워드를 사용한다. 
+
+- 모듈에서 하나의 값을 export할 경우 default 키워드를 사용할 수 있다. 단, default 키워드를 사용하면 var/let/const 키워드를 사용할 수 없다.
+
+## import 키워드
+
+다른 모듈에서 export한 식별자를 자신의 모듈 스코프 내부로 로드하기 위해 import 키워드를 사용한다.
+
+- default 키워드로 export한 모듈은 {}없이 임의의 이름으로 import한다.
+
+---
+
+# Babel과 Webpack을 이용한 ES6+/ES.NEXT 개발 환경 구축
+
+## ES6 모듈(ESM)의 문제점
+
+ESM에 존재하는 몇가지 단점으로 인해 일반적으로 별도의 모듈 로더를 사용한다.
+
+- IE를 포함한 구형 브라우저는 ESM을 지원하지 않는다.
+- ESM을 사용하더라도 여전히 트랜스파일링이나 번들링이 필요하다.
+- ESM이 아직 지원하지 않는 기능(bare import 등)이 있으며, 몇몇 이슈가 존재한다.  
+*bare import : (변수가 없는 import) 모듈을 가져오기만 하고 변수에 할당하지 않는 것  
+```js
+import React from 'react'; // import
+import 'react'; // bare import
+```
+
+## Babel
+
+ES6+/ES.NEXT로 구현된 최신 사양의 소스코드를 구형 브라우저에서도 동작하는 ES5 사양의 소스코드로 변환(트랜스파일링)할 수 있다.
+
+## Webpack
+
+dependency 관계가 있는 자바스크립트, CSS, 이미지 등 리소스들을 하나 또는 몇 개의 파일로 번들링하는 모듈 번들러
+
+---
 
 # 참조
 
