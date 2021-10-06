@@ -1704,8 +1704,8 @@ arr.includes(10); // false
   ```js
   const Students = ['John', 'Annie', 'Lee'];
 
-  fruits.sort();
-  console.log(fruits); // ['Annie', 'John', 'Lee']
+  Students.sort();
+  console.log(Students); // ['Annie', 'John', 'Lee']
   ```
 
 - 내림차순 : sort + reverse 메서드  
