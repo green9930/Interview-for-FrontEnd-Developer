@@ -7,8 +7,17 @@
 [5. state와 Lifecycle](#state와-Lifecycle)  
 [6. 이벤트 처리하기](#이벤트-처리하기)  
 [7. List와 key](#List와-key)  
-[8. form](#form)
-
+[8. form](#form)  
+[9. 리액트 최상위 API](#리액트-최상위-API)  
+[10. ReactDOM](#ReactDOM)  
+[11. ReactDOMServer](#ReactDOMServer)  
+[12. DOM 엘리먼트](#DOM-엘리먼트)  
+[13. React 기술 용어](#React-기술-용어)  
+[14. Hook](#Hook)  
+[15. State Hook](#State-Hook)  
+[16. Effect Hook](#Effect-Hook)  
+[17. custom Hook](#custom-Hook)  
+[18. Hook API 정리](#Hook-API-정리)  
 
 ---
 
@@ -890,7 +899,7 @@ class Reservation extends React.Component {
   - 활용
     - DOM 엘리먼트로 ref 전달하기
     - 고차 컴포넌트(Higher Order Component)로 ref 전달하기
-  - React.forwardRef는 렌더링에 사용될 함수를 매개변수로 받을 수 있다. React는 이 함수를 두 개 인자 props와 ref를 사용하여 호출하고, 이 함수는 React 노드를 반환합니다.
+  - `React.forwardRef`는 렌더링에 사용될 함수를 매개변수로 받을 수 있다. React는 이 함수를 두 개 인자 props와 ref를 사용하여 호출하고, 이 함수는 React 노드를 반환한다.
 
 ```js
 const FancyButton = React.forwardRef((props, ref) => (
@@ -906,19 +915,9 @@ const ref = React.createRef();
 - 위에서 React는 `<FancyButton ref={ref}>` 엘리먼트에 주어진 ref를 React.forwardRef 호출시 렌더링 함수에 2번째 인자로 전달하고 이 렌더링 함수는 ref를 `<button ref={ref}>` 엘리먼트에 전달한다.
 - 따라서 React가 해당 ref를 붙이고 난 뒤, ref.current는 `<button>` DOM 엘리먼트 인스턴스를 직접 가리키게 된다.
 
-**ref를 남용하면 안되는 이유**  
-부모 컴포넌트에게 DOM ref를 공개하기
-보기 드문 경우지만, 부모 컴포넌트에서 자식 컴포넌트의 DOM 노드에 접근하려 하는 경우도 있습니다. 자식 컴포넌트의 DOM 노드에 접근하는 것은 컴포넌트의 캡슐화를 파괴하기 떄문에 권장되지 않습니다. 그렇지만 가끔가다 자식 컴포넌트의 DOM 노드를 포커스하는 일이나, 크기 또는 위치를 계산하는 일 등을 할 때에는 효과적인 방법이 될 수 있습니다.
-
-자식 컴포넌트에 ref를 사용할 수 있지만, 이 방법은 자식 컴포넌트의 인스턴스의 DOM 노드가 아닌 자식 컴포넌트의 인스턴스를 가져온다는 점에서, 자식 컴포넌트가 함수 컴포넌트인 경우에는 동작하지 않는다는 점에서, 좋은 방법이 아닙니다.
-
-React 16.3 이후 버전의 React를 사용하신다면 위와 같은 경우에서 ref 전달하기(ref forwarding)을 사용하는 것이 권장됩니다. Ref 전달하기는 컴포넌트가 자식 컴포넌트의 ref를 자신의 ref로서 외부에 노출시키게 합니다. 자식 컴포넌트의 DOM 노드를 부모 컴포넌트에게 공개하는 방법에 대한 자세한 예시는 ref 넘겨주기 문서에서 볼 수 있습니다..
-
-React 16.2 이전 버전을 사용하시거나 ref 전달하기보다 더 유연한 방법을 원한다면 이런 대안을 사용할 수 있습니다.
-
-가능하다면 DOM 노드를 외부에 공개하는 일을 지양해야 합니다만 DOM 노드를 외부에 공개하는 일은 유용한 해결책이 될 수 있습니다. 또한 이 방법들은 자식 컴포넌트의 코드 수정을 요한다는 점을 기억하세요. 만약 자식 컴포넌트의 코드를 수정할 수 없다면 최후의 방법인 findDOMNode()를 사용하는 방법이 있지만 findDOMNode()는 좋지 못한 방법일 뿐더러 StrictMode에서 사용할 수 없습니다.
-
-
+**주의 사항**  
+드물지만 부모 컴포넌트에서 자식 컴포넌트의 DOM 노드에 접근하려 하는 경우가 있다. 자식 컴포넌트의 DOM 노드를 포커스하거나, 크기/위치를 계산하는 일 등을 할 때에는 효과적인 방법이 될 수 있다. 하지만 자식 컴포넌트의 DOM 노드에 접근하는 것은 컴포넌트의 캡슐화를 파괴하기 때문에 권장되지 않는다.
+  
 **Code Spliting**  
 (참고 : https://velopert.com/3421)
 SPA는 자바스크립트 번들 파일에 어플리케이션의 모든 로직을 불러오기 때문에 규모가 커지면 용량도 커진다. 용량이 커지면 페이지 로딩 속도가 느려져 이용자들이 불편을 겪는다.  
@@ -927,12 +926,11 @@ SPA는 자바스크립트 번들 파일에 어플리케이션의 모든 로직�
 **React.lazy**  
 React.lazy()를 사용하면 동적으로 불러오는 컴포넌트를 정의할 수 있다. 번들의 크기를 줄이고, 초기 렌더링에서 사용되지 않는 컴포넌트를 불러오는 작업을 지연시킬 수 있다.
 
-
 ```js
 // 이 컴포넌트는 동적으로 불러옵니다
 const SomeComponent = React.lazy(() => import('./SomeComponent'));
 ```
-lazy한 컴포넌트를 렌더링하려면 렌더링 트리 상위에 `<React.Suspense>` 컴포넌트가 존재해야 한다는 점에 유의하세요. 이를 활용하여 로딩 지시기(Loading indicator)를 나타낼 수 있습니다.
+- lazy한 컴포넌트를 렌더링하려면 렌더링 트리 상위에 `<React.Suspense>` 컴포넌트가 존재해야 한다. 이를 활용해 Loading indicator를 나타낼 수 있다.
 
 
 **컴포넌트가 업데이트 되는 경우**  
@@ -1075,7 +1073,6 @@ ReactDOMServer.renderToStaticNodeStream(element)
 브라우저마다 이벤트 이름, 종류, 처리 방식이 다르다. React는 이를 모든 브라우저에서 이벤트를 동일하게 처리하기 위한 이벤트 래퍼 SyntheticEvent 객체를 전달받는다. 따라서 React 개발자는 브라우저마다 다른 Native 이벤트를 신경쓰지 않고 React가 제공하는 이벤트만 사용할 수 있다.  
 
 **React에서 지원하는 이벤트 목록**  
-
 https://ko.reactjs.org/docs/events.html
 
 ---
@@ -1115,21 +1112,20 @@ JavaScript의 확장 문법으로 JavaScript의 기능을 모두 사용할 수 �
 
 ## 엘리먼트
 
-React 애플리캐이션을 구성하는 블록. 엘리먼트는 화면에 보이는 것들을 기술하며, React 엘리먼트는 변경되지 않는다. (일반적으로 엘리먼트는 직접 사용되지 않고 컴포넌트로부터 반환된다.)
-
 ```js
 const element = <h1>Hello, world</h1>;
 ```
+- React 애플리캐이션을 구성하는 블록
+- 엘리먼트는 화면에 보이는 것들을 기술하며, React 엘리먼트는 변경되지 않는다. (일반적으로 엘리먼트는 직접 사용되지 않고 컴포넌트로부터 반환된다.)
 
 ## 컴포넌트
-
-React 컴포넌트는 페이지에 렌더링할 React 엘리먼트를 반환하는 작고 재사용 가능한 코드 조각입니다. 가장 간단한 React 컴포넌트는 React 엘리먼트를 반환하는 일반 JavaScript 함수입니다.
 
 ```js
 function Welcome(props) {
   return <h1>Hello, {props.name}</h1>;
 }
 ```
+- 페이지에 렌더링할 React 엘리먼트를 반환하는 작고 재사용 가능한 코드 조각
 - 컴포넌트는 ES6 class로도 작성할 수 있다.
 
 ```js
@@ -1139,46 +1135,48 @@ class Welcome extends React.Component {
   }
 }
 ```
-컴포넌트는 기능별로 나눌 수 있으며 다른 컴포넌트 안에서 사용할 수 있습니다. 컴포넌트는 다른 컴포넌트, 배열, 문자열 그리고 숫자를 반환할 수 있습니다. 화면을 구성하는 데 자주 사용되는 UI(Button, Panel, Avatar), 혹은 복잡한 UI(App, FeedStory, Comment) 컴포넌트는 재사용 가능한 컴포넌트가 될 수 있습니다. 컴포넌트의 이름은 항상 대문자로 시작해야 합니다 (<Wrapper/> (o) <wrapper/> (x)). 컴포넌트 렌더링에 대한 자세한 내용은 이 문서를 참고하세요.
+
+- 컴포넌트는 기능별로 나눌 수 있으며 다른 컴포넌트 안에서 사용할 수 있다.
+- 컴포넌트는 다른 컴포넌트, 배열, 문자열, 숫자를 반환할 수 있다.
+- 컴포넌트의 이름은 항상 대문자로 시작해야 한다. (`<Wrapper/>` (o) `<wrapper/>` (x)). 
 
 ## props
 
-컴포넌트의 입력값으로 props는 부모 컴포넌트로부터 자식 컴포넌트로 전달된 데이터입니다.
+- 컴포넌트의 입력값으로 부모 컴포넌트로부터 자식 컴포넌트로 전달된 데이터
+- props는 읽기 전용 (어떤 방식으로든 수정하면 안 된다.)
 
-props는 읽기 전용이라는 것에 주의하세요. props는 어떤 방식으로든 수정해서는 안 됩니다.
-
+```js
 // 틀린 예
 props.number = 42;
-사용자의 입력 또는 네트워크 응답에 반응하여 어떤 값을 수정해야 한다면 state를 사용하세요.
+```
+- 사용자의 입력이나 네트워크 응답에 반응하여 어떤 값을 수정해야 한다면 state를 사용한다.
 
-props.children
-모든 컴포넌트에서 props.children를 사용할 수 있습니다. props.children은 컴포넌트의 여는 태그와 닫는 태그 사이의 내용을 포함합니다. 예를 들어,
+- `props.children` : 모든 컴포넌트에서 `props.children`를 사용할 수 있다. 
+- `props.children`은 컴포넌트의 여는 태그와 닫는 태그 사이의 내용을 포함한다.
 
 ```js
 <Welcome>Hello world!</Welcome>
 ```
-Hello world! 문자열은 Welcome 컴포넌트의 props.children으로 사용할 수 있습니다.
+- 이 경우, `Hello world!` 문자열은 `Welcome` 컴포넌트의 `props.children`으로 사용할 수 있다.
 
 ```js
 function Welcome(props) {
   return <p>{props.children}</p>;
 }
 ```
-Class로 정의된 컴포넌트에서는 this.props.children을 사용합니다.
+- Class로 정의된 컴포넌트에서는 this.props.children을 사용한다.
 
+```js
 class Welcome extends React.Component {
   render() {
     return <p>{this.props.children}</p>;
   }
 }
+```
 
 ## state
 
-컴포넌트와 관련된 일부 데이터가 시간에 따라 변경될 경우 state가 필요합니다. 예를 들어, Checkbox 컴포넌트는 isChecked state가 필요할 수 있으며, NewsFeed 컴포넌트는 fetchedPosts를 컴포넌트의 state를 통해 계속 주시하려고 할 수 있습니다.
-
-state와 props의 가장 중요한 차이점은 props는 부모 컴포넌트로부터 전달받지만, state는 컴포넌트에서 관리된다는 것입니다. 컴포넌트는 props를 변경할 수 없지만, state는 변경할 수 있습니다.
-
-데이터가 변경되는 각 특정한 부분에 대해, 해당 상태(state)를 “소유”하는 컴포넌트는 하나만 존재해야 합니다. 서로 다른 두 컴포넌트의 상태를 동기화하려고 하지 마십시오. 대신, 공통 상태를 두 컴포넌트의 공통 조상으로 끌어올리고 해당 데이터를 두 컴포넌트에 props로 전달하세요.
+- 컴포넌트와 관련된 일부 데이터가 시간에 따라 변경될 경우 필요
 
 ## 생명주기 메서드 (Lifecycle method)
 
@@ -1186,9 +1184,8 @@ state와 props의 가장 중요한 차이점은 props는 부모 컴포넌트로�
 
 ## Ref
 
-React는 컴포넌트에 접근할 수 있는 특수한 어트리뷰트를 지원합니다. ref 어트리뷰트 React.createRef() 함수, 콜백 함수, 혹은 문자열(레거시 API에서)로 생성할 수 있습니다. ref 어트리뷰트가 콜백 함수인 경우, 함수는 DOM 엘리먼트나 class 인스턴스를 인자로 받습니다. 이를 통해 컴포넌트 인스턴스나 DOM 엘리먼트에 직접 접근할 수 있습니다.
-
-Ref를 가능한 한 적게 사용하세요. 만약 앱에서 Ref를 사용하여 “작동되는 부분”이 많다면 하향식 데이터 흐름을 사용하는 것이 더 좋습니다.
+- React는 컴포넌트에 접근할 수 있는 특수한 어트리뷰트를 지원하고 ref 어트리뷰트 React.createRef() 함수, 콜백 함수, 혹은 문자열(레거시 API에서)로 생성할 수 있다. 
+- ref 어트리뷰트가 콜백 함수인 경우, 함수는 DOM 엘리먼트나 class 인스턴스를 매개변수로 받아 이를 통해 컴포넌트 인스턴스나 DOM 엘리먼트에 직접 접근할 수 있다.
 
 ## 재조정 (Reconciliation)
 
@@ -1201,7 +1198,6 @@ Ref를 가능한 한 적게 사용하세요. 만약 앱에서 Ref를 사용하�
 ## 개념
 
 Hook은 함수 컴포넌트에서 클래스처럼 React State와 라이프 사이클 기능을 연동(hook into)할 수 있게 해주는 함수이다. (클래스에서는 작동하지 않는다.)
-
 
 ## 등장 이유
 
