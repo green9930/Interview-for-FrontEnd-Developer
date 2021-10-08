@@ -1581,15 +1581,46 @@ function Counter() {
 ### 지연 초기화
 (참조 : https://ui.toast.com/weekly-pick/ko_20201022)
 
-## useMemo
-
 ## useCallback
 
 **메모이제이션(memoization)**  
 (참조 : https://ko.wikipedia.org/wiki/%EB%A9%94%EB%AA%A8%EC%9D%B4%EC%A0%9C%EC%9D%B4%EC%85%98)  
 컴퓨터 프로그램이 동일한 계산을 반복해야 할 때, 이전에 계산한 값을 메모리에 저장함으로써 동일한 계산의 반복 수행을 제거하여 프로그램 실행 속도를 빠르게 하는 기술이다. 동적 계획법의 핵심이 되는 기술이다. 
 
+## useMemo
 
+```js
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
+```
+
+- 메모이제이션된 값을 반환한다.  
+- 단, useMemo는 deps가 변경된 경우에 메모이제이션된 값만 다시 계산한다. (최적화 유리)
+- useMemo로 전달된 함수는 렌더링 중에 실행된다. 렌더링 중 발생하지 않는 것은 (EX. side effect) useMemo에서 하는 일이 아니다.
+- 의존성 배열이 없는 경우 매 렌더링 때마다 새 값을 계산한다.
+
+## useRef
+```js
+const refContainer = useRef(initialValue);
+```
+- useRef는 .current 프로퍼티로 전달된 인자(initialValue)로 초기화된 변경 가능한 ref 객체를 반환한다. (이때 반환된 객체는 컴포넌트의 전 생애주기를 통해 유지된다.)
+- useRef의 매개변수 : ref 객체의 초기값으로 ref의 current 속성에 할당된다. (ref.current로 접근 가능)
+- ref 객체는 업데이트 되어도 리렌더링하지 않는다. (`.current` 프로퍼티를 변형해도 리렌더링은 발생하지 않음)
+
+```js
+function TextInputWithFocusButton() {
+  const inputEl = useRef(null);
+  const onButtonClick = () => {
+    // `current` points to the mounted text input element
+    inputEl.current.focus();
+  };
+  return (
+    <>
+      <input ref={inputEl} type="text" />
+      <button onClick={onButtonClick}>Focus the input</button>
+    </>
+  );
+}
+```
 
 ---
 
